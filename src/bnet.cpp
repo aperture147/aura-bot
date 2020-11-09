@@ -673,12 +673,12 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !PUB (host public game)
-          // (removed)
+          // (moved to userland)
           //
 
           //
           // !PRIV (host private game)
-          // (removed)
+          // (moved to userland)
           //
 
           //
@@ -1406,10 +1406,34 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
       // in some cases the queue may be full of legitimate messages but we don't really care if the bot ignores one of these commands once in awhile
       // e.g. when several users join a game at the same time and cause multiple /whois messages to be queued at once
 
-      if (IsAdmin(User) || IsRootAdmin(User) || m_OutPackets.size() < 3)
+      if (IsAdmin(User) || IsRootAdmin(User) || m_OutPackets.size() < 9)
       {
         switch (CommandHash)
         {
+          //
+          // !PUB (host public game)
+          //
+
+          case HashCode("pub"):
+          {
+            if (!Payload.empty())
+              m_Aura->CreateGame(m_Aura->m_Map, GAME_PUBLIC, Payload, User, User, this, Whisper);
+
+            break;
+          }
+
+          //
+          // !PRIV (host private game)
+          //
+
+          case HashCode("priv"):
+          {
+            if (!Payload.empty())
+              m_Aura->CreateGame(m_Aura->m_Map, GAME_PRIVATE, Payload, User, User, this, Whisper);
+
+            break;
+          }
+
           //
           // !PRIVBY (host private game by other player)
           //

@@ -8,6 +8,9 @@
 *.dylib
 *.framework
 
+aura.exe
+aura++
+
 # OS generated files #
 ######################
 Thumbs.db

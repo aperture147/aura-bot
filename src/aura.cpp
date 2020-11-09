@@ -43,13 +43,6 @@
 #define __STORMLIB_SELF__
 #include <StormLib.h>
 
-#ifdef WIN32
-#define NOMINMAX
-#include <ws2tcpip.h>
-#include <winsock.h>
-#include <process.h>
-#endif
-
 #define VERSION "1.32"
 
 using namespace std;
@@ -113,24 +106,6 @@ int main(const int, const char* argv[])
 
   Print("[AURA] using monotonic timer with resolution " + std::to_string(static_cast<double>(std::chrono::steady_clock::period::num) / std::chrono::steady_clock::period::den * 1e9) + " nanoseconds");
 
-#ifdef WIN32
-  // initialize winsock
-
-  Print("[AURA] starting winsock");
-  WSADATA wsadata;
-
-  if (WSAStartup(MAKEWORD(2, 2), &wsadata) != 0)
-  {
-    Print("[AURA] error starting winsock");
-    return 1;
-  }
-
-  // increase process priority
-
-  Print("[AURA] setting process priority to \"high\"");
-  SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-#endif
-
   // initialize aura
 
   gAura = new CAura(&CFG);
@@ -152,22 +127,11 @@ int main(const int, const char* argv[])
   Print("[AURA] shutting down");
   delete gAura;
 
-#ifdef WIN32
-  // shutdown winsock
-
-  Print("[AURA] shutting down winsock");
-  WSACleanup();
-#endif
-
   // restart the program
 
   if (gRestart)
   {
-#ifdef WIN32
-    _spawnl(_P_OVERLAY, argv[0], argv[0], nullptr);
-#else
     execl(argv[0], argv[0], nullptr);
-#endif
   }
 
   return 0;
@@ -454,13 +418,8 @@ bool CAura::Update()
   send_tv.tv_sec  = 0;
   send_tv.tv_usec = 0;
 
-#ifdef WIN32
-  select(1, &fd, nullptr, nullptr, &tv);
-  select(1, nullptr, &send_fd, nullptr, &send_tv);
-#else
   select(nfds + 1, &fd, nullptr, nullptr, &tv);
   select(nfds + 1, nullptr, &send_fd, nullptr, &send_tv);
-#endif
 
   if (NumFDs == 0)
   {
@@ -721,18 +680,7 @@ void CAura::ExtractScripts(const uint8_t War3Version)
       return m_Warcraft3Path + "War3Patch.mpq";
   }();
 
-#ifdef WIN32
-  const wstring MPQFileNameW = [&]() {
-    if (War3Version >= 28)
-      return wstring(begin(m_Warcraft3Path), end(m_Warcraft3Path)) + _T("War3.mpq");
-    else
-      return wstring(begin(m_Warcraft3Path), end(m_Warcraft3Path)) + _T("War3Patch.mpq");
-  }();
-
-  if (SFileOpenArchive(MPQFileNameW.c_str(), 0, MPQ_OPEN_FORCE_MPQ_V1, &MPQ))
-#else
   if (SFileOpenArchive(MPQFileName.c_str(), 0, MPQ_OPEN_FORCE_MPQ_V1, &MPQ))
-#endif
   {
     Print("[AURA] loading MPQ file [" + MPQFileName + "]");
     void* SubFile;
@@ -795,11 +743,7 @@ void CAura::ExtractScripts(const uint8_t War3Version)
   }
   else
   {
-#ifdef WIN32
-    Print("[AURA] warning - unable to load MPQ file [" + MPQFileName + "] - error code " + to_string((uint32_t)GetLastError()));
-#else
     Print("[AURA] warning - unable to load MPQ file [" + MPQFileName + "] - error code " + to_string(static_cast<int32_t>(GetLastError())));
-#endif
   }
 }
 

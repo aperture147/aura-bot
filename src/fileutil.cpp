@@ -24,26 +24,11 @@ CODE PORTED FROM THE ORIGINAL GHOST PROJECT: http://ghost.pwner.org/
 #include <fstream>
 #include <algorithm>
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#else
 #include <dirent.h>
 #include <cstring>
-#endif
 
 using namespace std;
 
-#ifdef WIN32
-bool FileExists(string file)
-{
-  if (file.back() == '\\')
-    file = file.substr(0, file.size() - 1);
-
-  struct stat fileinfo;
-  return (stat(file.c_str(), &fileinfo) == 0);
-}
-#else
 bool FileExists(const string& file)
 {
   struct stat fileinfo;
@@ -55,31 +40,6 @@ vector<string> FilesMatch(const string& path, const string& pattern)
 {
   vector<string> Files;
 
-#ifdef WIN32
-  WIN32_FIND_DATAA data;
-  HANDLE           handle = FindFirstFileA((path + "\\*").c_str(), &data);
-  memset(&data, 0, sizeof(WIN32_FIND_DATAA));
-
-  while (handle != INVALID_HANDLE_VALUE)
-  {
-    string Name = string(data.cFileName);
-    transform(begin(Name), end(Name), begin(Name), ::tolower);
-
-    if (Name == pattern)
-    {
-      Files.push_back(string(data.cFileName));
-      break;
-    }
-
-    if (Name.find(pattern) != string::npos && Name != "..")
-      Files.push_back(string(data.cFileName));
-
-    if (FindNextFileA(handle, &data) == FALSE)
-      break;
-  }
-
-  FindClose(handle);
-#else
   DIR* dir = opendir(path.c_str());
 
   if (dir == nullptr)

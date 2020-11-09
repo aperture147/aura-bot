@@ -286,11 +286,7 @@ inline std::string AddPathSeparator(const std::string& path)
   if (path.empty())
     return std::string();
 
-#ifdef WIN32
-  const char Separator = '\\';
-#else
   const char Separator = '/';
-#endif
 
   if (*(end(path) - 1) == Separator)
     return path;

@@ -194,12 +194,7 @@ CTCPSocket::CTCPSocket()
 
 // make socket non blocking
 
-#ifdef WIN32
-  int32_t iMode = 1;
-  ioctlsocket(m_Socket, FIONBIO, (u_long FAR*)&iMode);
-#else
   fcntl(m_Socket, F_SETFL, fcntl(m_Socket, F_GETFL) | O_NONBLOCK);
-#endif
 
   // disable Nagle's algorithm
 
@@ -214,12 +209,7 @@ CTCPSocket::CTCPSocket(SOCKET nSocket, struct sockaddr_in nSIN)
 {
 // make socket non blocking
 
-#ifdef WIN32
-  int32_t iMode = 1;
-  ioctlsocket(m_Socket, FIONBIO, (u_long FAR*)&iMode);
-#else
   fcntl(m_Socket, F_SETFL, fcntl(m_Socket, F_GETFL) | O_NONBLOCK);
-#endif
 }
 
 CTCPSocket::~CTCPSocket()
@@ -240,12 +230,7 @@ void CTCPSocket::Reset()
 
 // make socket non blocking
 
-#ifdef WIN32
-  int32_t iMode = 1;
-  ioctlsocket(m_Socket, FIONBIO, (u_long FAR*)&iMode);
-#else
   fcntl(m_Socket, F_SETFL, fcntl(m_Socket, F_GETFL) | O_NONBLOCK);
-#endif
 }
 
 void CTCPSocket::DoRecv(fd_set* fd)
@@ -430,11 +415,7 @@ bool CTCPClient::CheckConnect()
 
 // check if the socket is connected
 
-#ifdef WIN32
-  if (select(1, nullptr, &fd, nullptr, &tv) == SOCKET_ERROR)
-#else
   if (select(m_Socket + 1, nullptr, &fd, nullptr, &tv) == SOCKET_ERROR)
-#endif
   {
     m_HasError = true;
     m_Error    = GetLastError();
@@ -470,22 +451,13 @@ CTCPServer::CTCPServer()
 {
 // make socket non blocking
 
-#ifdef WIN32
-  int32_t iMode = 1;
-  ioctlsocket(m_Socket, FIONBIO, (u_long FAR*)&iMode);
-#else
   fcntl(m_Socket, F_SETFL, fcntl(m_Socket, F_GETFL) | O_NONBLOCK);
-#endif
 
   // set the socket to reuse the address in case it hasn't been released yet
 
   int32_t optval = 1;
 
-#ifdef WIN32
-  setsockopt(m_Socket, SOL_SOCKET, SO_REUSEADDR, (const char*)&optval, sizeof(int32_t));
-#else
   setsockopt(m_Socket, SOL_SOCKET, SO_REUSEADDR, (const void*)&optval, sizeof(int32_t));
-#endif
 }
 
 CTCPServer::~CTCPServer()
@@ -543,11 +515,7 @@ CTCPSocket* CTCPServer::Accept(fd_set* fd)
     int32_t            AddrLen = sizeof(Addr);
     SOCKET             NewSocket;
 
-#ifdef WIN32
-    if ((NewSocket = accept(m_Socket, (struct sockaddr*)&Addr, &AddrLen)) != INVALID_SOCKET)
-#else
     if ((NewSocket = accept(m_Socket, reinterpret_cast<struct sockaddr*>(&Addr), reinterpret_cast<socklen_t*>(&AddrLen))) != INVALID_SOCKET)
-#endif
     {
       // success! return the new socket
 

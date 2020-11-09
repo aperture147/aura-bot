@@ -1,0 +1,44 @@
+# Compiled source #
+###################
+*.dll
+*.exe
+*.o
+*.so
+*.a
+*.dylib
+*.framework
+
+# OS generated files #
+######################
+Thumbs.db
+.DS_Store
+
+# Databases #
+#############
+*.dbs
+*.dbs-journal
+
+# Editor generated files #
+##########################
+*.swp
+*~
+
+# SVN Directories #
+###################
+.svn/
+
+# VS Directories #
+##################
+*.ipch
+/.vs
+*.log
+*.opendb
+*.suo
+*.db
+*.db-wal
+*.db-shm
+
+Dockerfile
+.travis.yml
+*.md
+.idea

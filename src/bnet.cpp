@@ -673,27 +673,13 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !PUB (host public game)
+          // (removed)
           //
-
-          case HashCode("pub"):
-          {
-            if (!Payload.empty())
-              m_Aura->CreateGame(m_Aura->m_Map, GAME_PUBLIC, Payload, User, User, this, Whisper);
-
-            break;
-          }
 
           //
           // !PRIV (host private game)
+          // (removed)
           //
-
-          case HashCode("priv"):
-          {
-            if (!Payload.empty())
-              m_Aura->CreateGame(m_Aura->m_Map, GAME_PRIVATE, Payload, User, User, this, Whisper);
-
-            break;
-          }
 
           //
           // !LOAD (load config file)
@@ -741,71 +727,12 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !ADDADMIN
-          //
-
-          case HashCode("addadmin"):
-          {
-            if (Payload.empty())
-              break;
-
-            if (IsRootAdmin(User))
-            {
-              if (IsAdmin(Payload))
-                QueueChatCommand("Error. User [" + Payload + "] is already an admin on server [" + m_Server + "]", User, Whisper, m_IRC);
-              else if (m_Aura->m_DB->AdminAdd(m_Server, Payload))
-                QueueChatCommand("Added user [" + Payload + "] to the admin database on server [" + m_Server + "]", User, Whisper, m_IRC);
-              else
-                QueueChatCommand("Error adding user [" + Payload + "] to the admin database on server [" + m_Server + "]", User, Whisper, m_IRC);
-            }
-            else
-              QueueChatCommand("You don't have access to that command", User, Whisper, m_IRC);
-
-            break;
-          }
+          // (removed)
 
           //
           // !ADDBAN
           // !BAN
-          //
-
-          case HashCode("addban"):
-          case HashCode("ban"):
-          {
-            if (Payload.empty())
-              break;
-
-            // extract the victim and the reason
-            // e.g. "Varlock leaver after dying" -> victim: "Varlock", reason: "leaver after dying"
-
-            string       Victim, Reason;
-            stringstream SS;
-            SS << Payload;
-            SS >> Victim;
-
-            if (!SS.eof())
-            {
-              getline(SS, Reason);
-              string::size_type Start = Reason.find_first_not_of(' ');
-
-              if (Start != string::npos)
-                Reason = Reason.substr(Start);
-            }
-
-            CDBBan* Ban = IsBannedName(Victim);
-
-            if (Ban)
-            {
-              QueueChatCommand("Error. User [" + Victim + "] is already banned on server [" + m_Server + "]", User, Whisper, m_IRC);
-
-              delete Ban;
-            }
-            else if (m_Aura->m_DB->BanAdd(m_Server, Victim, User, Reason))
-              QueueChatCommand("Banned user [" + Victim + "] on server [" + m_Server + "]", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("Error banning user [" + Victim + "] on server [" + m_Server + "]", User, Whisper, m_IRC);
-
-            break;
-          }
+          // (removed)
 
           //
           // !CHANNEL (change channel)
@@ -844,23 +771,8 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !CHECKBAN
+          // (removed)
           //
-
-          case HashCode("checkban"):
-          {
-            if (Payload.empty())
-              break;
-
-            CDBBan* Ban = IsBannedName(Payload);
-
-            if (Ban)
-              QueueChatCommand("User [" + Payload + "] was banned on server [" + m_Server + "] on " + Ban->GetDate() + " by [" + Ban->GetAdmin() + "] because [" + Ban->GetReason() + "]", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("User [" + Payload + "] is not banned on server [" + m_Server + "]", User, Whisper, m_IRC);
-
-            delete Ban;
-            break;
-          }
 
           //
           // !CLOSE (close slot)
@@ -940,64 +852,18 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !COUNTBANS
+          // (removed)
           //
-
-          case HashCode("countbans"):
-          {
-            uint32_t Count = m_Aura->m_DB->BanCount(m_Server);
-
-            if (Count == 0)
-              QueueChatCommand("There are no banned users on server [" + m_Server + "]", User, Whisper, m_IRC);
-            else if (Count == 1)
-              QueueChatCommand("There is 1 banned user on server [" + m_Server + "]", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("There are " + to_string(Count) + " banned users on server [" + m_Server + "]", User, Whisper, m_IRC);
-
-            break;
-          }
 
           //
           // !DELADMIN
-          //
-
-          case HashCode("deladmin"):
-          {
-            if (Payload.empty())
-              break;
-
-            if (IsRootAdmin(User))
-            {
-              if (!IsAdmin(Payload))
-                QueueChatCommand("User [" + Payload + "] is not an admin on server [" + m_Server + "]", User, Whisper, m_IRC);
-              else if (m_Aura->m_DB->AdminRemove(m_Server, Payload))
-                QueueChatCommand("Deleted user [" + Payload + "] from the admin database on server [" + m_Server + "]", User, Whisper, m_IRC);
-              else
-                QueueChatCommand("Error deleting user [" + Payload + "] from the admin database on server [" + m_Server + "]", User, Whisper, m_IRC);
-            }
-            else
-              QueueChatCommand("You don't have access to that command", User, Whisper, m_IRC);
-
-            break;
-          }
+          // (removed)
 
           //
           // !DELBAN
           // !UNBAN
-          //
+          // (removed)
 
-          case HashCode("delban"):
-          case HashCode("unban"):
-          {
-            if (Payload.empty())
-              break;
-
-            if (m_Aura->m_DB->BanRemove(Payload))
-              QueueChatCommand("Unbanned user [" + Payload + "] on all realms", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("Error unbanning user [" + Payload + "] on all realms", User, Whisper, m_IRC);
-
-            break;
-          }
 
           //
           // !DOWNLOADS
@@ -1178,11 +1044,7 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
           case HashCode("countmap"):
           case HashCode("countmaps"):
           {
-#ifdef WIN32
-            const auto Count = FilesMatch(m_Aura->m_MapPath, ".").size();
-#else
             const auto Count = FilesMatch(m_Aura->m_MapPath, "").size();
-#endif
 
             QueueChatCommand("There are currently [" + to_string(Count) + "] maps", User, Whisper, m_IRC);
             break;
@@ -1196,54 +1058,18 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
           case HashCode("countcfg"):
           case HashCode("countcfgs"):
           {
-#ifdef WIN32
-            const auto Count = FilesMatch(m_Aura->m_MapCFGPath, ".").size();
-#else
             const auto Count = FilesMatch(m_Aura->m_MapCFGPath, "").size();
-#endif
             QueueChatCommand("There are currently [" + to_string(Count) + "] cfgs", User, Whisper, m_IRC);
             break;
           }
 
           //
           // !DELETECFG
-          //
-
-          case HashCode("deletecfg"):
-          {
-            if (Payload.empty() || !IsRootAdmin(User))
-              break;
-
-            if (Payload.find(".cfg") == string::npos)
-              Payload.append(".cfg");
-
-            if (!remove((m_Aura->m_MapCFGPath + Payload).c_str()))
-              QueueChatCommand("Deleted [" + Payload + "]", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("Removal failed", User, Whisper, m_IRC);
-
-            break;
-          }
+          // (removed)
 
           //
           // !DELETEMAP
-          //
-
-          case HashCode("deletemap"):
-          {
-            if (Payload.empty() || !IsRootAdmin(User))
-              break;
-
-            if (Payload.find(".w3x") == string::npos && Payload.find(".w3m") == string::npos)
-              Payload.append(".w3x");
-
-            if (!remove((m_Aura->m_MapPath + Payload).c_str()))
-              QueueChatCommand("Deleted [" + Payload + "]", User, Whisper, m_IRC);
-            else
-              QueueChatCommand("Removal failed", User, Whisper, m_IRC);
-
-            break;
-          }
+          // (removed)
 
           //
           // !OPEN (open slot)
@@ -1300,53 +1126,13 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !PRIVBY (host private game by other player)
+          // (moved to userland)
           //
-
-          case HashCode("privby"):
-          {
-            if (Payload.empty())
-              break;
-
-            // extract the owner and the game name
-            // e.g. "Varlock dota 6.54b arem ~~~" -> owner: "Varlock", game name: "dota 6.54b arem ~~~"
-
-            string            Owner, GameName;
-            string::size_type GameNameStart = Payload.find(' ');
-
-            if (GameNameStart != string::npos)
-            {
-              Owner    = Payload.substr(0, GameNameStart);
-              GameName = Payload.substr(GameNameStart + 1);
-              m_Aura->CreateGame(m_Aura->m_Map, GAME_PRIVATE, GameName, Owner, User, this, Whisper);
-            }
-
-            break;
-          }
 
           //
           // !PUBBY (host public game by other player)
+          // (moved to userland)
           //
-
-          case HashCode("pubby"):
-          {
-            if (Payload.empty())
-              break;
-
-            // extract the owner and the game name
-            // e.g. "Varlock dota 6.54b arem ~~~" -> owner: "Varlock", game name: "dota 6.54b arem ~~~"
-
-            string            Owner, GameName;
-            string::size_type GameNameStart = Payload.find(' ');
-
-            if (GameNameStart != string::npos)
-            {
-              Owner    = Payload.substr(0, GameNameStart);
-              GameName = Payload.substr(GameNameStart + 1);
-              m_Aura->CreateGame(m_Aura->m_Map, GAME_PUBLIC, GameName, Owner, User, this, Whisper);
-            }
-
-            break;
-          }
 
           //
           // !RELOAD
@@ -1544,24 +1330,8 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !RESTART
+          // (removed)
           //
-
-          case HashCode("restart"):
-          {
-            if ((!m_Aura->m_Games.size() && !m_Aura->m_CurrentGame) || Payload == "force")
-            {
-              m_Exiting = true;
-
-              // gRestart is defined in aura.cpp
-
-              extern bool gRestart;
-              gRestart = true;
-            }
-            else
-              QueueChatCommand("Games in progress, use !restart force", User, Whisper, m_IRC);
-
-            break;
-          }
 
           //
           // !W
@@ -1593,37 +1363,13 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !DISABLE
+          // (removed)
           //
-
-          case HashCode("disable"):
-          {
-            if (IsRootAdmin(User))
-            {
-              QueueChatCommand("Creation of new games has been disabled (if there is a game in the lobby it will not be automatically unhosted)", User, Whisper, m_IRC);
-              m_Aura->m_Enabled = false;
-            }
-            else
-              QueueChatCommand("You don't have access to that command", User, Whisper, m_IRC);
-
-            break;
-          }
 
           //
           // !ENABLE
+          // (removed)
           //
-
-          case HashCode("enable"):
-          {
-            if (IsRootAdmin(User))
-            {
-              QueueChatCommand("Creation of new games has been enabled", User, Whisper, m_IRC);
-              m_Aura->m_Enabled = true;
-            }
-            else
-              QueueChatCommand("You don't have access to that command", User, Whisper, m_IRC);
-
-            break;
-          }
 
           //
           // !GETCLAN
@@ -1638,40 +1384,14 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !GETFRIENDS
+          // (removed)
           //
-
-          case HashCode("getfriends"):
-          {
-            SendGetFriendsList();
-            QueueChatCommand("Updating the bot's internal friends list from battle.net..", User, Whisper, m_IRC);
-            break;
-          }
 
           //
           // !EXIT
           // !QUIT
+          // (removed)
           //
-
-          case HashCode("exit"):
-          case HashCode("quit"):
-          {
-            if (IsRootAdmin(User))
-            {
-              if (Payload == "force")
-                m_Exiting = true;
-              else
-              {
-                if (m_Aura->m_CurrentGame || !m_Aura->m_Games.empty())
-                  QueueChatCommand("At least one game is in the lobby or in progress. Use 'force' to shutdown anyway", User, Whisper, m_IRC);
-                else
-                  m_Exiting = true;
-              }
-            }
-            else
-              QueueChatCommand("You don't have access to that command", User, Whisper, m_IRC);
-
-            break;
-          }
         }
       }
       else
@@ -1690,6 +1410,56 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
       {
         switch (CommandHash)
         {
+          //
+          // !PRIVBY (host private game by other player)
+          //
+
+          case HashCode("privby"):
+          {
+            if (Payload.empty())
+              break;
+
+            // extract the owner and the game name
+            // e.g. "Varlock dota 6.54b arem ~~~" -> owner: "Varlock", game name: "dota 6.54b arem ~~~"
+
+            string            Owner, GameName;
+            string::size_type GameNameStart = Payload.find(' ');
+
+            if (GameNameStart != string::npos)
+            {
+              Owner    = Payload.substr(0, GameNameStart);
+              GameName = Payload.substr(GameNameStart + 1);
+              m_Aura->CreateGame(m_Aura->m_Map, GAME_PRIVATE, GameName, Owner, User, this, Whisper);
+            }
+
+            break;
+          }
+
+          //
+          // !PUBBY (host public game by other player)
+          //
+
+          case HashCode("pubby"):
+          {
+            if (Payload.empty())
+              break;
+
+            // extract the owner and the game name
+            // e.g. "Varlock dota 6.54b arem ~~~" -> owner: "Varlock", game name: "dota 6.54b arem ~~~"
+
+            string            Owner, GameName;
+            string::size_type GameNameStart = Payload.find(' ');
+
+            if (GameNameStart != string::npos)
+            {
+              Owner    = Payload.substr(0, GameNameStart);
+              GameName = Payload.substr(GameNameStart + 1);
+              m_Aura->CreateGame(m_Aura->m_Map, GAME_PUBLIC, GameName, Owner, User, this, Whisper);
+            }
+
+            break;
+          }
+
           //
           // !STATS
           //

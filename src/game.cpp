@@ -1647,7 +1647,7 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
 
   const uint64_t CommandHash = HashCode(Command);
 
-  if (player->GetSpoofed() && (AdminCheck || RootAdminCheck || IsOwner(User)))
+  if (AdminCheck || RootAdminCheck || IsOwner(User))
   {
     Print("[GAME: " + m_GameName + "] admin [" + User + "] sent command [" + Command + "] with payload [" + Payload + "]");
 
@@ -1933,37 +1933,8 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
 
         //
         // !KICK (kick a player)
+        // (removed)
         //
-
-        case HashCode("kick"):
-        case HashCode("k"):
-        {
-          if (Payload.empty())
-            break;
-
-          CGamePlayer* LastMatch = nullptr;
-          uint32_t     Matches   = GetPlayerFromNamePartial(Payload, &LastMatch);
-
-          if (Matches == 0)
-            SendChat(player, "Unable to kick player [" + Payload + "]. No matches found");
-          else if (Matches == 1)
-          {
-            LastMatch->SetDeleteMe(true);
-            LastMatch->SetLeftReason("was kicked by player [" + User + "]");
-
-            if (!m_GameLoading && !m_GameLoaded)
-              LastMatch->SetLeftCode(PLAYERLEAVE_LOBBY);
-            else
-              LastMatch->SetLeftCode(PLAYERLEAVE_LOST);
-
-            if (!m_GameLoading && !m_GameLoaded)
-              OpenSlot(GetSIDFromPID(LastMatch->GetPID()), false);
-          }
-          else
-            SendChat(player, "Unable to kick player [" + Payload + "]. Found more than one match");
-
-          break;
-        }
 
         //
         // !LATENCY (set game latency)
@@ -2404,25 +2375,8 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
 
         //
         // !MUTE
+        // (removed)
         //
-
-        case HashCode("mute"):
-        {
-          CGamePlayer*   LastMatch = nullptr;
-          const uint32_t Matches   = GetPlayerFromNamePartial(Payload, &LastMatch);
-
-          if (Matches == 0)
-            SendChat(player, "Unable to mute/unmute player [" + Payload + "]. No matches found");
-          else if (Matches == 1)
-          {
-            SendAllChat("Player [" + LastMatch->GetName() + "] was muted by player [" + User + "]");
-            LastMatch->SetMuted(true);
-          }
-          else
-            SendChat(player, "Unable to mute/unmute player [" + Payload + "]. Found more than one match");
-
-          break;
-        }
 
         //
         // !MUTEALL
@@ -2459,89 +2413,8 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
         //
         // !ADDBAN
         // !BAN
+        // (removed)
         //
-
-        case HashCode("addban"):
-        case HashCode("ban"):
-        {
-          if (Payload.empty() || m_Aura->m_BNETs.empty())
-            break;
-
-          // extract the victim and the reason
-          // e.g. "Varlock leaver after dying" -> victim: "Varlock", reason: "leaver after dying"
-
-          string       Victim, Reason;
-          stringstream SS;
-          SS << Payload;
-          SS >> Victim;
-
-          if (!SS.eof())
-          {
-            getline(SS, Reason);
-            string::size_type Start = Reason.find_first_not_of(' ');
-
-            if (Start != string::npos)
-              Reason = Reason.substr(Start);
-          }
-
-          if (m_GameLoaded)
-          {
-            string VictimLower = Victim;
-            transform(begin(VictimLower), end(VictimLower), begin(VictimLower), ::tolower);
-            uint32_t Matches   = 0;
-            CDBBan*  LastMatch = nullptr;
-
-            // try to match each player with the passed string (e.g. "Varlock" would be matched with "lock")
-            // we use the m_DBBans vector for this in case the player already left and thus isn't in the m_Players vector anymore
-
-            for (auto& ban : m_DBBans)
-            {
-              string TestName = ban->GetName();
-              transform(begin(TestName), end(TestName), begin(TestName), ::tolower);
-
-              if (TestName.find(VictimLower) != string::npos)
-              {
-                ++Matches;
-                LastMatch = ban;
-
-                // if the name matches exactly stop any further matching
-
-                if (TestName == VictimLower)
-                {
-                  Matches = 1;
-                  break;
-                }
-              }
-            }
-
-            if (Matches == 0)
-              SendChat(player, "Unable to ban player [" + Victim + "]. No matches found");
-            else if (Matches == 1)
-            {
-              m_Aura->m_DB->BanAdd(LastMatch->GetServer(), LastMatch->GetName(), User, Reason);
-              SendAllChat("Player [" + LastMatch->GetName() + "] was banned by player [" + User + "] on server [" + LastMatch->GetServer() + "]");
-            }
-            else
-              SendChat(player, "Unable to ban player [" + Victim + "]. Found more than one match");
-          }
-          else
-          {
-            CGamePlayer* LastMatch = nullptr;
-            uint32_t     Matches   = GetPlayerFromNamePartial(Victim, &LastMatch);
-
-            if (Matches == 0)
-              SendChat(player, "Unable to ban player [" + Victim + "]. No matches found");
-            else if (Matches == 1)
-            {
-              m_Aura->m_DB->BanAdd(LastMatch->GetJoinedRealm(), LastMatch->GetName(), User, Reason);
-              SendAllChat("Player [" + LastMatch->GetName() + "] was banned by player [" + User + "] on server [" + LastMatch->GetJoinedRealm() + "]");
-            }
-            else
-              SendChat(player, "Unable to ban player [" + Victim + "]. Found more than one match");
-          }
-
-          break;
-        }
 
         //
         // !CHECK
@@ -2593,28 +2466,8 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
 
         //
         // !CHECKBAN
+        // (removed)
         //
-
-        case HashCode("checkban"):
-        {
-          if (Payload.empty() || m_Aura->m_BNETs.empty())
-            break;
-
-          for (auto& bnet : m_Aura->m_BNETs)
-          {
-            CDBBan* Ban = m_Aura->m_DB->BanCheck(bnet->GetServer(), Payload);
-
-            if (Ban)
-            {
-              SendAllChat("User [" + Payload + "] was banned on server [" + bnet->GetServer() + "] on " + Ban->GetDate() + " by [" + Ban->GetAdmin() + "] because [" + Ban->GetReason() + "]");
-              delete Ban;
-            }
-            else
-              SendAllChat("User [" + Payload + "] is not banned on server [" + bnet->GetServer() + "]");
-          }
-
-          break;
-        }
 
         //
         // !CLEARHCL
@@ -2996,39 +2849,13 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
 
         //
         // !UNMUTE
+        // (removed)
         //
-
-        case HashCode("unmute"):
-        {
-          CGamePlayer* LastMatch = nullptr;
-          uint32_t     Matches   = GetPlayerFromNamePartial(Payload, &LastMatch);
-
-          if (Matches == 0)
-            SendChat(player, "Unable to mute/unmute player [" + Payload + "]. No matches found");
-          else if (Matches == 1)
-          {
-            SendAllChat("Player [" + LastMatch->GetName() + "] was unmuted by player [" + User + "]");
-            LastMatch->SetMuted(false);
-          }
-          else
-            SendChat(player, "Unable to mute/unmute player [" + Payload + "]. Found more than one match");
-
-          break;
-        }
 
         //
         // !UNMUTEALL
+        // (removed)
         //
-
-        case HashCode("unmuteall"):
-        {
-          if (!m_GameLoaded)
-            break;
-
-          SendAllChat("Global chat unmuted");
-          m_MuteAll = false;
-          break;
-        }
 
         //
         // !VOTECANCEL
@@ -3232,10 +3059,7 @@ bool CGame::EventPlayerBotCommand(CGamePlayer* player, string& command, string& 
   }
   else
   {
-    if (!player->GetSpoofed())
-      Print("[GAME: " + m_GameName + "] non-spoofchecked user [" + User + "] sent command [" + Command + "] with payload [" + Payload + "]");
-    else
-      Print("[GAME: " + m_GameName + "] non-admin [" + User + "] sent command [" + Command + "] with payload [" + Payload + "]");
+    Print("[GAME: " + m_GameName + "] non-admin [" + User + "] sent command [" + Command + "] with payload [" + Payload + "]");
   }
 
   /*********************

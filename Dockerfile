@@ -12,14 +12,14 @@ COPY . .
 RUN cd StormLib && \
     mkdir build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_DYNAMIC_MODULE=1 .. && \
-    make && make install && \
+    make -j$(nproc) && make install && \
     cd ../.. && rm -rf StormLib
 
 RUN cd bncsutil/src/bncsutil && \
-    make && make install && \
+    make -j$(nproc) && make install && \
     cd ../../.. && rm -rf bncsutil
 
-RUN make && make install
+RUN make -j$(nproc) && make install
 
 WORKDIR /aura
 

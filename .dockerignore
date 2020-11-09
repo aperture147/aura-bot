@@ -38,6 +38,11 @@ Thumbs.db
 *.db-wal
 *.db-shm
 
+.git
+.gitignore
+.dockerignore
+.clang-format
+aura.cfg
 Dockerfile
 .travis.yml
 *.md

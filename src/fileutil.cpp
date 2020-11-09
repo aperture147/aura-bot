@@ -34,7 +34,6 @@ bool FileExists(const string& file)
   struct stat fileinfo;
   return (stat(file.c_str(), &fileinfo) == 0);
 }
-#endif
 
 vector<string> FilesMatch(const string& path, const string& pattern)
 {
@@ -63,7 +62,6 @@ vector<string> FilesMatch(const string& path, const string& pattern)
   }
 
   closedir(dir);
-#endif
 
   return Files;
 }

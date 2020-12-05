@@ -585,63 +585,8 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
         {
           //
           // !MAP (load map file)
+          // (moved to userland)
           //
-
-          case HashCode("map"):
-          {
-            if (Payload.empty())
-              QueueChatCommand("The currently loaded map/config file is: [" + m_Aura->m_Map->GetCFGFile() + "]", User, Whisper, m_IRC);
-            else
-            {
-              if (!FileExists(m_Aura->m_MapPath))
-              {
-                Print("[BNET: " + m_ServerAlias + "] error listing maps - map path doesn't exist");
-                QueueChatCommand("Error listing maps - map path doesn't exist", User, Whisper, m_IRC);
-              }
-              else
-              {
-                const vector<string> Matches = MapFilesMatch(Payload);
-
-                if (Matches.empty())
-                  QueueChatCommand("No maps found with that name", User, Whisper, m_IRC);
-                else if (Matches.size() == 1)
-                {
-                  const string File = Matches.at(0);
-                  QueueChatCommand("Loading map file [" + File + "]", User, Whisper, m_IRC);
-
-                  // hackhack: create a config file in memory with the required information to load the map
-
-                  CConfig MapCFG;
-                  MapCFG.Set("map_path", R"(Maps\Download\)" + File);
-                  MapCFG.Set("map_localpath", File);
-
-                  if (File.find("DotA") != string::npos)
-                    MapCFG.Set("map_type", "dota");
-
-                  m_Aura->m_Map->Load(&MapCFG, File);
-
-                  if (m_Aura->m_Map)
-                  {
-                    const char* ErrorMessage = m_Aura->m_Map->CheckValid();
-
-                    if (ErrorMessage)
-                      QueueChatCommand(std::string("Error while loading map: [") + ErrorMessage + "]", User, Whisper, m_IRC);
-                  }
-                }
-                else
-                {
-                  string FoundMaps;
-
-                  for (const auto& match : Matches)
-                    FoundMaps += match + ", ";
-
-                  QueueChatCommand("Maps: " + FoundMaps.substr(0, FoundMaps.size() - 2), User, Whisper, m_IRC);
-                }
-              }
-            }
-
-            break;
-          }
 
           //
           // !UNHOST
@@ -683,47 +628,8 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
 
           //
           // !LOAD (load config file)
+          // (moved to userland)
           //
-
-          case HashCode("load"):
-          {
-            if (Payload.empty())
-              QueueChatCommand("The currently loaded map/config file is: [" + m_Aura->m_Map->GetCFGFile() + "]", User, Whisper, m_IRC);
-            else
-            {
-              if (!FileExists(m_Aura->m_MapCFGPath))
-              {
-                Print("[BNET: " + m_ServerAlias + "] error listing map configs - map config path doesn't exist");
-                QueueChatCommand("Error listing map configs - map config path doesn't exist", User, Whisper, m_IRC);
-              }
-              else
-              {
-                const vector<string> Matches = ConfigFilesMatch(Payload);
-
-                if (Matches.empty())
-                  QueueChatCommand("No map configs found with that name", User, Whisper, m_IRC);
-                else if (Matches.size() == 1)
-                {
-                  const string File = Matches.at(0);
-                  QueueChatCommand("Loading config file [" + m_Aura->m_MapCFGPath + File + "]", User, Whisper, m_IRC);
-                  CConfig MapCFG;
-                  MapCFG.Read(m_Aura->m_MapCFGPath + File);
-                  m_Aura->m_Map->Load(&MapCFG, m_Aura->m_MapCFGPath + File);
-                }
-                else
-                {
-                  string FoundMapConfigs;
-
-                  for (const auto& match : Matches)
-                    FoundMapConfigs += match + ", ";
-
-                  QueueChatCommand("Maps configs: " + FoundMapConfigs.substr(0, FoundMapConfigs.size() - 2), User, Whisper, m_IRC);
-                }
-              }
-            }
-
-            break;
-          }
 
           //
           // !ADDADMIN
@@ -1410,6 +1316,110 @@ void CBNET::ProcessChatEvent(const CIncomingChatEvent* chatEvent)
       {
         switch (CommandHash)
         {
+          //
+          // !MAP (load map file)
+          //
+
+          case HashCode("map"):
+          {
+            if (Payload.empty())
+              QueueChatCommand("The currently loaded map/config file is: [" + m_Aura->m_Map->GetCFGFile() + "]", User, Whisper, m_IRC);
+            else
+            {
+              if (!FileExists(m_Aura->m_MapPath))
+              {
+                Print("[BNET: " + m_ServerAlias + "] error listing maps - map path doesn't exist");
+                QueueChatCommand("Error listing maps - map path doesn't exist", User, Whisper, m_IRC);
+              }
+              else
+              {
+                const vector<string> Matches = MapFilesMatch(Payload);
+
+                if (Matches.empty())
+                  QueueChatCommand("No maps found with that name", User, Whisper, m_IRC);
+                else if (Matches.size() == 1)
+                {
+                  const string File = Matches.at(0);
+                  QueueChatCommand("Loading map file [" + File + "]", User, Whisper, m_IRC);
+
+                  // hackhack: create a config file in memory with the required information to load the map
+
+                  CConfig MapCFG;
+                  MapCFG.Set("map_path", R"(Maps\Download\)" + File);
+                  MapCFG.Set("map_localpath", File);
+
+                  if (File.find("DotA") != string::npos)
+                    MapCFG.Set("map_type", "dota");
+
+                  m_Aura->m_Map->Load(&MapCFG, File);
+
+                  if (m_Aura->m_Map)
+                  {
+                    const char* ErrorMessage = m_Aura->m_Map->CheckValid();
+
+                    if (ErrorMessage)
+                      QueueChatCommand(std::string("Error while loading map: [") + ErrorMessage + "]", User, Whisper, m_IRC);
+                  }
+                }
+                else
+                {
+                  string FoundMaps;
+
+                  for (const auto& match : Matches)
+                    FoundMaps += match + ", ";
+
+                  QueueChatCommand("Maps: " + FoundMaps.substr(0, FoundMaps.size() - 2), User, Whisper, m_IRC);
+                }
+              }
+            }
+
+            break;
+          }
+
+          //
+          // !LOAD (load config file)
+          //
+
+          case HashCode("load"):
+          {
+            if (Payload.empty())
+              QueueChatCommand("The currently loaded map/config file is: [" + m_Aura->m_Map->GetCFGFile() + "]", User, Whisper, m_IRC);
+            else
+            {
+              if (!FileExists(m_Aura->m_MapCFGPath))
+              {
+                Print("[BNET: " + m_ServerAlias + "] error listing map configs - map config path doesn't exist");
+                QueueChatCommand("Error listing map configs - map config path doesn't exist", User, Whisper, m_IRC);
+              }
+              else
+              {
+                const vector<string> Matches = ConfigFilesMatch(Payload);
+
+                if (Matches.empty())
+                  QueueChatCommand("No map configs found with that name", User, Whisper, m_IRC);
+                else if (Matches.size() == 1)
+                {
+                  const string File = Matches.at(0);
+                  QueueChatCommand("Loading config file [" + m_Aura->m_MapCFGPath + File + "]", User, Whisper, m_IRC);
+                  CConfig MapCFG;
+                  MapCFG.Read(m_Aura->m_MapCFGPath + File);
+                  m_Aura->m_Map->Load(&MapCFG, m_Aura->m_MapCFGPath + File);
+                }
+                else
+                {
+                  string FoundMapConfigs;
+
+                  for (const auto& match : Matches)
+                    FoundMapConfigs += match + ", ";
+
+                  QueueChatCommand("Maps configs: " + FoundMapConfigs.substr(0, FoundMapConfigs.size() - 2), User, Whisper, m_IRC);
+                }
+              }
+            }
+
+            break;
+          }
+
           //
           // !PUB (host public game)
           //
